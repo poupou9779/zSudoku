@@ -2,30 +2,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int get_grid_from(int grid[9][9], const char *path)
+
+void get_grid_from_buffer_line(int grid[9][9], const char *buffer)
 {
-    FILE *file_grid = fopen(path, "r");
-    if(file_grid != NULL)
-    {
-        int i,
-            j;
-        for(i = 0; i < 9; ++i)
-        {
-            for(j = 0; j < 9; ++j)
-                grid[i][j] = fgetc(file_grid) - '0';
-            fgetc(file_grid);
-        }
-        fclose(file_grid);
-        return 1;
-    }
-    return 0;
+    int i, j;
+    for(i = 0; i < 9; ++i)
+        for(j = 0; j < 9; ++j)
+            grid[i][j] = buffer[i*9 + j] - '0';
 }
 
 void display_grid(int grid[9][9])
 {
     int i, j;
+    printf("------------------\n");
     for(i = 0; i < 9; i++)
     {
+        putchar('|');
         for(j = 0; j < 9; j++)
             printf(!((j+1) % 3) ? "%d|" : "%d ", grid[i][j]);
         putchar('\n');
@@ -64,12 +56,7 @@ int is_on_block(int n, int grid[9][9], int x, int y)
     return 0;
 }
 
-void solve_grid(int grid[9][9])
-{
-    printf("%s solved\n\n", is_grid_ok(grid, 0, 0) == 1 ? "is" : "isn't");
-}
-
-int is_grid_ok(int grid[9][9], int x, int y)
+int solve_grid_x_y(int grid[9][9], int x, int y)
 {
     int n;
     /*if the whole grid has been tested, it's ok*/
@@ -77,14 +64,14 @@ int is_grid_ok(int grid[9][9], int x, int y)
         return 1;
     /*if this case is correct, test the next case*/
     if(grid[x][y] != 0)
-        return is_grid_ok(grid, (x+1)%9, y+((x+1)/9));
+        return solve_grid_x_y(grid, (x+1)%9, y+((x+1)/9));
     /*otherwise, test each possibility for the case grid[x][y]*/
     for(n = 1; n <= 9; ++n)
     {
         if(!is_on_line(n, grid, x) && !is_on_column(n, grid, y) && !is_on_block(n, grid, x, y))
         {
             grid[x][y] = n;
-            if(is_grid_ok(grid, (x+1)%9, y+((x+1)/9)))
+            if(solve_grid_x_y(grid, (x+1)%9, y+((x+1)/9)) == 1)
                 return 1;
         }
         grid[x][y] = 0;
